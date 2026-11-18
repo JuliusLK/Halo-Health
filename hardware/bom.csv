@@ -1,0 +1,11 @@
+Unit,Component,Qty,Specification,Notes
+Oximeter,ESP32-C3 Super Mini,1,ESP32-C3,Sensing unit and ESP-NOW sender
+Oximeter,MAX30102,1,Pulse oximeter and heart rate sensor module,I2C 0x57
+Oximeter,Battery,1,Type and capacity not specified,JST-PH 2-pin connector
+Oximeter,Capacitor,1,1 uF,Between sensor VIN and GND
+Kit box,ESP32-S3 DevKitC-1 class board,1,ESP32-S3,Dual-core controller
+Kit box,2.8 inch TFT touchscreen,1,ILI9341 SPI with touch controller,15-pin header
+Kit box,Li-ion battery,1,3500 mAh,No built-in BMS
+Kit box,TP4056 charging module,1,Li-ion charger with basic protection,Connected via J1
+Kit box,MT3608 boost converter,1,DC-DC step-up 2A,Supplies ESP32-S3 and TFT
+Kit box,Resistor,2,1 kohm,Battery voltage divider (R1 and R3)

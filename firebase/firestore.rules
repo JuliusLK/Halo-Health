@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Recommended rules for the current HaloHealth schema (see docs/firestore-schema.md).
+// Written from the firmware and schema in this repository, not from the mobile app:
+// test them in the Firebase Rules Playground and with the real app before publishing.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // The dedicated kit box account. Replace the placeholder with its real email
+    // in the copy you publish in the Firebase console.
+    function isKit() {
+      return signedIn() && request.auth.token.email == 'EMAIL FIREBASE';
+    }
+
+    // Shape of one oximeter reading written by the kit box.
+    function validReading(d) {
+      return d.keys().hasOnly(['bpm', 'saturasi', 'statusSaturasi', 'waktu'])
+          && d.bpm is int && d.bpm > 20 && d.bpm < 250
+          && d.saturasi is int && d.saturasi >= 50 && d.saturasi <= 100
+          && d.statusSaturasi in ['Normal', 'Rendah', 'Kritis']
+          && d.waktu is timestamp;
+    }
+
+    match /users/{uid} {
+      // App users manage only their own profile.
+      allow read, write: if isOwner(uid);
+
+      // Kit box: look up the owner of a Kit Code (query where kodeKit == X, limit 1).
+      allow list: if isKit() && request.query.limit <= 1;
+
+      // Kit box: may only change lastRiwayatID on the user document.
+      allow update: if isKit()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastRiwayatID']);
+
+      // Everything below the user (alat/*, alat/*/riwayat/*) belongs to the owner.
+      match /{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Kit box: may only create valid readings in the history.
+      match /alat/{alatName}/riwayat/{readingId} {
+        allow create: if isKit() && validReading(request.resource.data);
+      }
+    }
+
+    // Deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
